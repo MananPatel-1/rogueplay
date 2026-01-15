@@ -77,6 +77,7 @@ export const teamsRelations = relations(teams, ({ many }) => ({
 export const usersRelations = relations(users, ({ many }) => ({
   teamMembers: many(teamMembers),
   invitationsSent: many(invitations),
+  gamingSessions: many(gamingSessions),
 }));
 
 export const invitationsRelations = relations(invitations, ({ one }) => ({
@@ -140,3 +141,74 @@ export enum ActivityType {
   INVITE_TEAM_MEMBER = 'INVITE_TEAM_MEMBER',
   ACCEPT_INVITATION = 'ACCEPT_INVITATION',
 }
+
+// Gaming node status enum
+export enum GamingNodeStatus {
+  AVAILABLE = 'available',
+  STARTING = 'starting',
+  OCCUPIED = 'occupied',
+  STOPPING = 'stopping',
+}
+
+// Gaming session status enum
+export enum GamingSessionStatus {
+  STARTING = 'starting',
+  AWAITING_PAIRING = 'awaiting_pairing',
+  ACTIVE = 'active',
+  ENDING = 'ending',
+  ENDED = 'ended',
+}
+
+// Gaming nodes - TensorDock instances with Wolf
+export const gamingNodes = pgTable('gaming_nodes', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  tensorDockInstanceId: varchar('tensordock_instance_id', { length: 100 }).notNull().unique(),
+  wolfApiUrl: varchar('wolf_api_url', { length: 255 }).notNull(),
+  wolfApiKey: text('wolf_api_key').notNull(),
+  wolfPairSecret: text('wolf_pair_secret').notNull(),
+  serverIp: varchar('server_ip', { length: 45 }),
+  status: varchar('status', { length: 20 }).notNull().default('available'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Gaming sessions - tracks user sessions on nodes
+export const gamingSessions = pgTable('gaming_sessions', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id),
+  nodeId: integer('node_id')
+    .notNull()
+    .references(() => gamingNodes.id),
+  status: varchar('status', { length: 20 }).notNull().default('starting'),
+  wolfClientId: varchar('wolf_client_id', { length: 100 }),
+  startedAt: timestamp('started_at').notNull().defaultNow(),
+  pairedAt: timestamp('paired_at'),
+  expiresAt: timestamp('expires_at').notNull(),
+  endedAt: timestamp('ended_at'),
+  endReason: varchar('end_reason', { length: 50 }),
+});
+
+// Relations for gaming tables
+export const gamingNodesRelations = relations(gamingNodes, ({ many }) => ({
+  sessions: many(gamingSessions),
+}));
+
+export const gamingSessionsRelations = relations(gamingSessions, ({ one }) => ({
+  user: one(users, {
+    fields: [gamingSessions.userId],
+    references: [users.id],
+  }),
+  node: one(gamingNodes, {
+    fields: [gamingSessions.nodeId],
+    references: [gamingNodes.id],
+  }),
+}));
+
+// Gaming type exports
+export type GamingNode = typeof gamingNodes.$inferSelect;
+export type NewGamingNode = typeof gamingNodes.$inferInsert;
+export type GamingSession = typeof gamingSessions.$inferSelect;
+export type NewGamingSession = typeof gamingSessions.$inferInsert;
