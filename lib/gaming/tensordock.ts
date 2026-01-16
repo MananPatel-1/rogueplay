@@ -4,17 +4,22 @@ export interface TensorDockInstance {
   id: string;
   name: string;
   status: string;
+  type?: string;
+  ipAddress?: string;
+  portForwards?: Array<{ port: number; protocol: string }>;
+  resources?: {
+    vcpu_count?: number;
+    ram_gb?: number;
+    storage_gb?: number;
+    gpus?: Record<string, { count: number; v0Name: string }>;
+  };
+  rateHourly?: number;
+  // Legacy snake_case aliases for compatibility
   ip_address?: string;
-  port_forwards?: Record<string, number>;
-  vcpu?: number;
-  ram_gb?: number;
-  storage_gb?: number;
-  gpus?: string[];
-  hourly_rate?: number;
 }
 
 export interface TensorDockListResponse {
-  instances: TensorDockInstance[];
+  data: TensorDockInstance[];
 }
 
 export interface TensorDockInstanceResponse {
@@ -55,7 +60,7 @@ class TensorDockClient {
 
   async listInstances(): Promise<TensorDockInstance[]> {
     const data = await this.request<TensorDockListResponse>('/instances');
-    return data.instances || [];
+    return data.data || [];
   }
 
   async getInstance(id: string): Promise<TensorDockInstance> {
@@ -90,12 +95,13 @@ class TensorDockClient {
       const instance = await this.getInstance(id);
       const status = instance.status?.toLowerCase();
 
-      console.log(`[TensorDock] Instance ${id} status: ${status}, IP: ${instance.ip_address}`);
+      const ip = instance.ipAddress || instance.ip_address;
+      console.log(`[TensorDock] Instance ${id} status: ${status}, IP: ${ip}`);
 
       // Accept various "running" status values
       const isRunning = status === 'running' || status === 'active' || status === 'online';
 
-      if (isRunning && instance.ip_address) {
+      if (isRunning && ip) {
         return instance;
       }
 

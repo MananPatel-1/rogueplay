@@ -42,11 +42,12 @@ export const startVmJob = inngest.createFunction(
       );
     });
 
-    console.log(`[start-vm] Instance ready with IP: ${instance.ip_address}`);
+    const serverIp = instance.ipAddress || instance.ip_address || null;
+    console.log(`[start-vm] Instance ready with IP: ${serverIp}`);
 
-    // Step 2: Update node with server IP
+    // Step 2: Update node with server IP and Wolf API URL
     await step.run('update-node-ip', async () => {
-      await updateNodeStatus(nodeId, GamingNodeStatus.STARTING, instance.ip_address || null);
+      await updateNodeStatus(nodeId, GamingNodeStatus.STARTING, serverIp);
     });
 
     // Step 3: Update session to AWAITING_PAIRING
@@ -58,6 +59,6 @@ export const startVmJob = inngest.createFunction(
 
     console.log(`[start-vm] Session ${sessionId} ready for pairing`);
 
-    return { success: true, serverIp: instance.ip_address };
+    return { success: true, serverIp };
   }
 );

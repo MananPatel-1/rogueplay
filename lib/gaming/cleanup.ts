@@ -38,7 +38,7 @@ export async function cleanupExpiredSessions(): Promise<{
         // 3. Unpair from Wolf if we have a client ID
         if (session.wolfClientId) {
           try {
-            const wolfClient = createWolfClient(node.wolfApiUrl, node.wolfApiKey);
+            const wolfClient = createWolfClient(node.wolfApiUrl, process.env.WOLF_API_KEY!);
             await wolfClient.unpairClient(session.wolfClientId);
           } catch (unpairError) {
             console.error(

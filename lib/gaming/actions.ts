@@ -64,13 +64,20 @@ export const claimNode = validatedActionWithUser(
     }
 
     try {
-      // 3. Mark node as starting
+      // 3. Check if instance is already running
+      const instance = await tensorDockClient.getInstance(node.tensorDockInstanceId);
+      const instanceStatus = instance.status?.toLowerCase();
+      const isRunning = instanceStatus === 'running' || instanceStatus === 'active' || instanceStatus === 'online';
+
+      // 4. Mark node as starting
       await updateNodeStatus(nodeId, GamingNodeStatus.STARTING);
 
-      // 4. Start TensorDock VM (API call, doesn't wait for ready)
-      await tensorDockClient.startInstance(node.tensorDockInstanceId);
+      // 5. Start TensorDock VM only if not already running
+      if (!isRunning) {
+        await tensorDockClient.startInstance(node.tensorDockInstanceId);
+      }
 
-      // 5. Create session with expiry
+      // 6. Create session with expiry
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + SESSION_DURATION_HOURS);
 
@@ -81,7 +88,7 @@ export const claimNode = validatedActionWithUser(
         expiresAt,
       });
 
-      // 6. Trigger background job to wait for VM and update status
+      // 7. Trigger background job to wait for VM and update status
       // This returns immediately - the job handles polling TensorDock
       await inngest.send({
         name: 'gaming/vm.start.requested',
@@ -135,8 +142,8 @@ export const submitPin = validatedActionWithUser(
     }
 
     try {
-      // 3. Create Wolf client
-      const wolfClient = createWolfClient(node.wolfApiUrl, node.wolfApiKey);
+      // 3. Create Wolf client (use API key from env, shared across all nodes)
+      const wolfClient = createWolfClient(node.wolfApiUrl, process.env.WOLF_API_KEY!);
 
       // 4. Get the pending pair secret from Wolf
       const pairSecret = await wolfClient.getPendingPairSecret();
@@ -205,7 +212,7 @@ export const releaseSession = validatedActionWithUser(
       // 3. Unpair from Wolf if we have a client ID
       if (session.wolfClientId) {
         try {
-          const wolfClient = createWolfClient(node.wolfApiUrl, node.wolfApiKey);
+          const wolfClient = createWolfClient(node.wolfApiUrl, process.env.WOLF_API_KEY!);
           await wolfClient.unpairClient(session.wolfClientId);
         } catch (unpairError) {
           console.error('Failed to unpair from Wolf:', unpairError);
