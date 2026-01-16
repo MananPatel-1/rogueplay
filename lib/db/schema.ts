@@ -157,6 +157,7 @@ export enum GamingSessionStatus {
   ACTIVE = 'active',
   ENDING = 'ending',
   ENDED = 'ended',
+  FAILED = 'failed',
 }
 
 // Gaming nodes - TensorDock instances with Wolf

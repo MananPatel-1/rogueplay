@@ -18,6 +18,7 @@ import {
   GamingNodeStatus,
   GamingSessionStatus,
 } from '@/lib/db/schema';
+import { inngest } from '@/lib/inngest/client';
 
 // Session duration in hours (configurable via env)
 const SESSION_DURATION_HOURS = parseInt(
@@ -40,6 +41,7 @@ const releaseSessionSchema = z.object({
 });
 
 // Claim a node - starts VM, creates session
+// Now uses background job for VM startup to avoid blocking
 export const claimNode = validatedActionWithUser(
   claimNodeSchema,
   async (data, _, user) => {
@@ -65,7 +67,7 @@ export const claimNode = validatedActionWithUser(
       // 3. Mark node as starting
       await updateNodeStatus(nodeId, GamingNodeStatus.STARTING);
 
-      // 4. Start TensorDock VM
+      // 4. Start TensorDock VM (API call, doesn't wait for ready)
       await tensorDockClient.startInstance(node.tensorDockInstanceId);
 
       // 5. Create session with expiry
@@ -79,29 +81,21 @@ export const claimNode = validatedActionWithUser(
         expiresAt,
       });
 
-      // 6. Wait for VM to be ready and get IP
-      const instance = await tensorDockClient.waitForInstanceReady(
-        node.tensorDockInstanceId,
-        120000, // 2 minute timeout
-        5000    // poll every 5 seconds
-      );
-
-      // 7. Update node with server IP
-      await updateNodeStatus(
-        nodeId,
-        GamingNodeStatus.STARTING,
-        instance.ip_address || null
-      );
-
-      // 8. Update session to awaiting_pairing
-      await updateSession(session.id, {
-        status: GamingSessionStatus.AWAITING_PAIRING,
+      // 6. Trigger background job to wait for VM and update status
+      // This returns immediately - the job handles polling TensorDock
+      await inngest.send({
+        name: 'gaming/vm.start.requested',
+        data: {
+          sessionId: session.id,
+          nodeId: nodeId,
+          tensorDockInstanceId: node.tensorDockInstanceId,
+        },
       });
 
+      // Return immediately - client will poll for status updates
       return {
-        success: 'Session started successfully',
+        success: 'Session starting',
         sessionId: session.id,
-        serverIp: instance.ip_address,
       };
     } catch (error) {
       // Rollback on error

@@ -70,6 +70,8 @@ export function SessionPanel({ session, onSessionEnd }: SessionPanelProps) {
         return 'Active';
       case GamingSessionStatus.ENDING:
         return 'Ending...';
+      case GamingSessionStatus.FAILED:
+        return 'Failed';
       default:
         return session.status;
     }
@@ -158,6 +160,18 @@ export function SessionPanel({ session, onSessionEnd }: SessionPanelProps) {
           <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
             <p className="text-green-700 dark:text-green-300 font-medium">
               Connected! You can now play games via Moonlight.
+            </p>
+          </div>
+        )}
+
+        {/* Failed session info */}
+        {session.status === GamingSessionStatus.FAILED && (
+          <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg border border-red-200 dark:border-red-800">
+            <p className="text-red-700 dark:text-red-300 font-medium">
+              Failed to start the gaming VM. {session.endReason && `Reason: ${session.endReason}`}
+            </p>
+            <p className="text-red-600 dark:text-red-400 text-sm mt-2">
+              Please end this session and try again.
             </p>
           </div>
         )}
