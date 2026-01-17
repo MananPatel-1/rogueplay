@@ -2,6 +2,7 @@ import { inngest } from '../client';
 import { tensorDockClient } from '@/lib/gaming/tensordock';
 import { updateNodeStatus, updateSession, endSession } from '@/lib/gaming/queries';
 import { GamingNodeStatus, GamingSessionStatus } from '@/lib/db/schema';
+import { createWolfClient } from '@/lib/gaming/wolf';
 
 export const startVmJob = inngest.createFunction(
   {
@@ -50,7 +51,29 @@ export const startVmJob = inngest.createFunction(
       await updateNodeStatus(nodeId, GamingNodeStatus.STARTING, serverIp);
     });
 
-    // Step 3: Update session to AWAITING_PAIRING
+    // Step 3: Clear any lingering Wolf clients (ensures clean slate for new user)
+    await step.run('clear-wolf-clients', async () => {
+      const wolfApiUrl = `http://${serverIp}:47990`;
+      const wolfClient = createWolfClient(wolfApiUrl, process.env.WOLF_API_KEY!);
+
+      // Retry as Wolf may still be starting up
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const result = await wolfClient.unpairAllClients();
+          console.log(`[start-vm] Cleared ${result.unpairedCount} Wolf clients`);
+          return result;
+        } catch (error) {
+          if (attempt < 2) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            continue;
+          }
+          console.warn('[start-vm] Could not clear Wolf clients:', error);
+          return { unpairedCount: 0, errors: [String(error)] };
+        }
+      }
+    });
+
+    // Step 4: Update session to AWAITING_PAIRING
     await step.run('update-session-status', async () => {
       await updateSession(sessionId, {
         status: GamingSessionStatus.AWAITING_PAIRING,

@@ -209,15 +209,14 @@ export const releaseSession = validatedActionWithUser(
         status: GamingSessionStatus.ENDING,
       });
 
-      // 3. Unpair from Wolf if we have a client ID
-      if (session.wolfClientId) {
-        try {
-          const wolfClient = createWolfClient(node.wolfApiUrl, process.env.WOLF_API_KEY!);
-          await wolfClient.unpairClient(session.wolfClientId);
-        } catch (unpairError) {
-          console.error('Failed to unpair from Wolf:', unpairError);
-          // Continue with cleanup even if unpair fails
-        }
+      // 3. Unpair all clients from Wolf (don't rely on wolfClientId which may be null)
+      try {
+        const wolfClient = createWolfClient(node.wolfApiUrl, process.env.WOLF_API_KEY!);
+        const result = await wolfClient.unpairAllClients();
+        console.log(`[releaseSession] Unpaired ${result.unpairedCount} Wolf clients`);
+      } catch (unpairError) {
+        console.error('Failed to unpair from Wolf:', unpairError);
+        // Continue with cleanup even if unpair fails
       }
 
       // 4. Stop TensorDock VM

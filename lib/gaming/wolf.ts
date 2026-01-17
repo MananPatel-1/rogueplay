@@ -81,6 +81,25 @@ export class WolfApiClient {
     });
   }
 
+  async unpairAllClients(): Promise<{ unpairedCount: number; errors: string[] }> {
+    const clients = await this.listClients();
+    const errors: string[] = [];
+    let unpairedCount = 0;
+
+    for (const client of clients) {
+      try {
+        await this.unpairClient(client.client_id);
+        unpairedCount++;
+      } catch (error) {
+        errors.push(
+          `Failed to unpair ${client.client_id}: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    }
+
+    return { unpairedCount, errors };
+  }
+
   async listClients(): Promise<WolfClient[]> {
     const data = await this.request<{ clients: WolfClient[] }>('/api/v1/clients');
     return data.clients || [];
