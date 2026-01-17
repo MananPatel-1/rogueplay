@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Activity, Menu } from 'lucide-react';
+import { Users, Activity, Menu, Gamepad2 } from 'lucide-react';
 
 export default function DashboardLayout({
   children
@@ -15,6 +15,7 @@ export default function DashboardLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const navItems = [
+    { href: '/dashboard/gaming', icon: Gamepad2, label: 'Gaming' },
     { href: '/dashboard', icon: Users, label: 'Team' },
     { href: '/dashboard/activity', icon: Activity, label: 'Activity' }
   ];
