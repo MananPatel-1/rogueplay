@@ -40,7 +40,7 @@ export function NodeGrid() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
       </div>
     );
   }
@@ -48,8 +48,8 @@ export function NodeGrid() {
   if (error) {
     return (
       <div className="text-center py-12">
-        <p className="text-destructive">Failed to load gaming nodes</p>
-        <p className="text-sm text-muted-foreground mt-2">Please try again later</p>
+        <p className="text-red-400">Failed to load gaming nodes</p>
+        <p className="text-sm text-gray-500 mt-2">Please try again later</p>
       </div>
     );
   }
@@ -68,13 +68,13 @@ export function NodeGrid() {
   return (
     <div className="space-y-4">
       {claimState?.error && (
-        <div className="p-4 bg-destructive/10 text-destructive rounded-lg">
+        <div className="p-4 bg-red-500/10 text-red-400 rounded-lg border border-red-500/20">
           {claimState.error}
         </div>
       )}
 
       {claimState?.success && (
-        <div className="p-4 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 rounded-lg">
+        <div className="p-4 bg-green-500/10 text-green-400 rounded-lg border border-green-500/20">
           Session started! Loading your gaming node...
         </div>
       )}
@@ -93,9 +93,9 @@ export function NodeGrid() {
       </div>
 
       {data?.nodes?.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
+        <div className="text-center py-12 text-gray-400">
           <p>No nodes available at the moment.</p>
-          <p className="text-sm mt-2">Please check back later or wait for a node to become free.</p>
+          <p className="text-sm mt-2 text-gray-500">Please check back later or wait for a node to become free.</p>
         </div>
       )}
     </div>

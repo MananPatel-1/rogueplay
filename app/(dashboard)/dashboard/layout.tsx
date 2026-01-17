@@ -22,12 +22,12 @@ export default function DashboardLayout({
   return (
     <div className="flex flex-col min-h-[calc(100dvh-68px)] max-w-7xl mx-auto w-full">
       {/* Mobile header */}
-      <div className="lg:hidden flex items-center justify-between bg-white border-b border-gray-200 p-4">
+      <div className="lg:hidden flex items-center justify-between bg-gray-800 border-b border-gray-700 p-4">
         <div className="flex items-center">
-          <span className="font-medium">Settings</span>
+          <span className="font-medium text-white">Dashboard</span>
         </div>
         <Button
-          className="-mr-3"
+          className="-mr-3 text-gray-300 hover:text-white hover:bg-gray-700"
           variant="ghost"
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
@@ -39,7 +39,7 @@ export default function DashboardLayout({
       <div className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar */}
         <aside
-          className={`w-64 bg-white lg:bg-gray-50 border-r border-gray-200 lg:block ${
+          className={`w-64 bg-gray-800 border-r border-gray-700 lg:block ${
             isSidebarOpen ? 'block' : 'hidden'
           } lg:relative absolute inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
             isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -49,9 +49,11 @@ export default function DashboardLayout({
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} passHref>
                 <Button
-                  variant={pathname === item.href ? 'secondary' : 'ghost'}
+                  variant="ghost"
                   className={`shadow-none my-1 w-full justify-start ${
-                    pathname === item.href ? 'bg-gray-100' : ''
+                    pathname === item.href
+                      ? 'bg-purple-600/20 text-purple-300 hover:bg-purple-600/30 hover:text-purple-200'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                   }`}
                   onClick={() => setIsSidebarOpen(false)}
                 >

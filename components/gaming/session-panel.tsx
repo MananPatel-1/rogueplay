@@ -78,11 +78,11 @@ export function SessionPanel({ session, onSessionEnd }: SessionPanelProps) {
   };
 
   return (
-    <Card>
+    <Card className="bg-gray-800 border-gray-700">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex items-center justify-between text-white">
           <span>Active Session: {session.node.name}</span>
-          <span className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
+          <span className="flex items-center gap-2 text-sm font-normal text-purple-300">
             <Clock className="h-4 w-4" />
             {timeRemaining}
           </span>
@@ -90,29 +90,29 @@ export function SessionPanel({ session, onSessionEnd }: SessionPanelProps) {
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Session status indicator */}
-        <div className="p-4 bg-muted rounded-lg">
-          <p className="font-medium">Status: {getStatusDisplay()}</p>
+        <div className="p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+          <p className="font-medium text-white">Status: <span className="text-purple-300">{getStatusDisplay()}</span></p>
         </div>
 
         {/* Starting state */}
         {session.status === GamingSessionStatus.STARTING && (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-muted-foreground">Starting your gaming VM...</span>
+            <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+            <span className="ml-2 text-gray-400">Starting your gaming VM...</span>
           </div>
         )}
 
         {/* Server URL section - shown when VM is ready */}
         {session.node.serverIp && session.status !== GamingSessionStatus.STARTING && (
           <div className="space-y-2">
-            <Label>Server URL (copy to Moonlight)</Label>
+            <Label className="text-gray-300">Server URL (copy to Moonlight)</Label>
             <div className="flex gap-2">
-              <Input value={session.node.serverIp} readOnly className="font-mono" />
-              <Button variant="outline" size="icon" onClick={copyServerUrl}>
+              <Input value={session.node.serverIp} readOnly className="font-mono bg-gray-700 border-gray-600 text-white" />
+              <Button variant="outline" size="icon" onClick={copyServerUrl} className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white">
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-500">
               Add this IP address in your Moonlight client to connect
             </p>
           </div>
@@ -123,26 +123,26 @@ export function SessionPanel({ session, onSessionEnd }: SessionPanelProps) {
           <form action={pinAction} className="space-y-4">
             <input type="hidden" name="sessionId" value={session.id} />
             <div className="space-y-2">
-              <Label htmlFor="pin">Enter PIN from Moonlight</Label>
+              <Label htmlFor="pin" className="text-gray-300">Enter PIN from Moonlight</Label>
               <Input
                 id="pin"
                 name="pin"
                 type="text"
                 placeholder="Enter 4-digit PIN"
                 maxLength={8}
-                className="font-mono text-center text-lg tracking-widest"
+                className="font-mono text-center text-lg tracking-widest bg-gray-700 border-gray-600 text-white placeholder:text-gray-500"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-500">
                 After adding the server in Moonlight, it will display a PIN. Enter it here to complete pairing.
               </p>
             </div>
             {pinState?.error && (
-              <p className="text-destructive text-sm">{pinState.error}</p>
+              <p className="text-red-400 text-sm">{pinState.error}</p>
             )}
             {pinState?.success && (
-              <p className="text-green-600 text-sm">{pinState.success}</p>
+              <p className="text-green-400 text-sm">{pinState.success}</p>
             )}
-            <Button type="submit" disabled={isPinPending} className="w-full">
+            <Button type="submit" disabled={isPinPending} className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0">
               {isPinPending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -157,8 +157,8 @@ export function SessionPanel({ session, onSessionEnd }: SessionPanelProps) {
 
         {/* Active session info */}
         {session.status === GamingSessionStatus.ACTIVE && (
-          <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
-            <p className="text-green-700 dark:text-green-300 font-medium">
+          <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+            <p className="text-green-400 font-medium">
               Connected! You can now play games via Moonlight.
             </p>
           </div>
@@ -166,11 +166,11 @@ export function SessionPanel({ session, onSessionEnd }: SessionPanelProps) {
 
         {/* Failed session info */}
         {session.status === GamingSessionStatus.FAILED && (
-          <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg border border-red-200 dark:border-red-800">
-            <p className="text-red-700 dark:text-red-300 font-medium">
+          <div className="p-4 bg-red-500/10 rounded-lg border border-red-500/20">
+            <p className="text-red-400 font-medium">
               Failed to start the gaming VM. {session.endReason && `Reason: ${session.endReason}`}
             </p>
-            <p className="text-red-600 dark:text-red-400 text-sm mt-2">
+            <p className="text-red-500/80 text-sm mt-2">
               Please end this session and try again.
             </p>
           </div>
@@ -180,13 +180,13 @@ export function SessionPanel({ session, onSessionEnd }: SessionPanelProps) {
         <form action={releaseAction}>
           <input type="hidden" name="sessionId" value={session.id} />
           {releaseState?.error && (
-            <p className="text-destructive text-sm mb-2">{releaseState.error}</p>
+            <p className="text-red-400 text-sm mb-2">{releaseState.error}</p>
           )}
           <Button
             type="submit"
             variant="destructive"
             disabled={isReleasePending || session.status === GamingSessionStatus.ENDING}
-            className="w-full"
+            className="w-full bg-red-600 hover:bg-red-700"
           >
             {isReleasePending || session.status === GamingSessionStatus.ENDING ? (
               <>
