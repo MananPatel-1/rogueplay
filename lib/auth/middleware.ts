@@ -53,6 +53,29 @@ export function validatedActionWithUser<S extends z.ZodType<any, any>, T>(
   };
 }
 
+export function validatedActionWithAdmin<S extends z.ZodType<any, any>, T>(
+  schema: S,
+  action: ValidatedActionWithUserFunction<S, T>
+) {
+  return async (prevState: ActionState, formData: FormData) => {
+    const user = await getUser();
+    if (!user) {
+      throw new Error('User is not authenticated');
+    }
+
+    if (user.role !== 'admin') {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
+    const result = schema.safeParse(Object.fromEntries(formData));
+    if (!result.success) {
+      return { error: result.error.errors[0].message };
+    }
+
+    return action(result.data, formData, user);
+  };
+}
+
 type ActionWithTeamFunction<T> = (
   formData: FormData,
   team: TeamDataWithMembers

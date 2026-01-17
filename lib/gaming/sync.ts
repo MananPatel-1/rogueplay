@@ -1,4 +1,4 @@
-import { tensorDockClient } from './tensordock';
+import { tensorDockClient, type TensorDockInstance } from './tensordock';
 import { getAllNodes, createNode, deleteNode, deleteSessionsByNodeId } from './queries';
 import { GamingNodeStatus, type GamingNode } from '@/lib/db/schema';
 

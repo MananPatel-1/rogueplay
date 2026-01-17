@@ -128,3 +128,38 @@ export async function getTeamForUser() {
 
   return result?.team || null;
 }
+
+export async function getPendingUsers() {
+  return await db
+    .select({
+      id: users.id,
+      email: users.email,
+      name: users.name,
+      createdAt: users.createdAt
+    })
+    .from(users)
+    .where(and(eq(users.approvalStatus, 'pending'), isNull(users.deletedAt)))
+    .orderBy(desc(users.createdAt));
+}
+
+export async function isAdmin(userId?: number): Promise<boolean> {
+  if (userId) {
+    const result = await db
+      .select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    return result[0]?.role === 'admin';
+  }
+
+  const user = await getUser();
+  return user?.role === 'admin';
+}
+
+export async function getAdminUser() {
+  const user = await getUser();
+  if (!user || user.role !== 'admin') {
+    return null;
+  }
+  return user;
+}

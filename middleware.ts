@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import { signToken, verifyToken } from '@/lib/auth/session';
 
 const protectedRoutes = ['/dashboard'];
+const adminRoutes = ['/admin'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -10,9 +11,30 @@ export async function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
+  const isAdminRoute = adminRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
 
+  // Redirect unauthenticated users from protected routes
   if (isProtectedRoute && !sessionCookie) {
     return NextResponse.redirect(new URL('/sign-in', request.url));
+  }
+
+  // Redirect unauthenticated users from admin routes
+  if (isAdminRoute && !sessionCookie) {
+    return NextResponse.redirect(new URL('/sign-in', request.url));
+  }
+
+  // Check admin role for admin routes
+  if (isAdminRoute && sessionCookie) {
+    try {
+      const parsed = await verifyToken(sessionCookie.value);
+      if (parsed.user.role !== 'admin') {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
+    } catch (error) {
+      return NextResponse.redirect(new URL('/sign-in', request.url));
+    }
   }
 
   let res = NextResponse.next();
@@ -36,7 +58,7 @@ export async function middleware(request: NextRequest) {
     } catch (error) {
       console.error('Error updating session:', error);
       res.cookies.delete('session');
-      if (isProtectedRoute) {
+      if (isProtectedRoute || isAdminRoute) {
         return NextResponse.redirect(new URL('/sign-in', request.url));
       }
     }

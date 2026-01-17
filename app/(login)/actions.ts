@@ -86,6 +86,23 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
     };
   }
 
+  // Check approval status
+  if (foundUser.approvalStatus === 'pending') {
+    return {
+      error: 'Your account is pending admin approval. Please wait for activation.',
+      email,
+      password: ''
+    };
+  }
+
+  if (foundUser.approvalStatus === 'rejected') {
+    return {
+      error: 'Your account registration was not approved. Please contact support.',
+      email,
+      password: ''
+    };
+  }
+
   await Promise.all([
     setSession(foundUser),
     logActivity(foundTeam?.id, foundUser.id, ActivityType.SIGN_IN)
@@ -208,17 +225,14 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
 
   await Promise.all([
     db.insert(teamMembers).values(newTeamMember),
-    logActivity(teamId, createdUser.id, ActivityType.SIGN_UP),
-    setSession(createdUser)
+    logActivity(teamId, createdUser.id, ActivityType.SIGN_UP)
   ]);
 
-  const redirectTo = formData.get('redirect') as string | null;
-  if (redirectTo === 'checkout') {
-    const priceId = formData.get('priceId') as string;
-    return createCheckoutSession({ team: createdTeam, priceId });
-  }
-
-  redirect('/dashboard');
+  // Don't auto-login - account needs admin approval first
+  return {
+    success: true,
+    pendingApproval: true
+  };
 });
 
 export async function signOut() {

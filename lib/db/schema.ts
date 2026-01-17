@@ -14,6 +14,9 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   role: varchar('role', { length: 20 }).notNull().default('member'),
+  approvalStatus: varchar('approval_status', { length: 20 }).notNull().default('pending'),
+  approvedAt: timestamp('approved_at'),
+  approvedBy: integer('approved_by'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
   deletedAt: timestamp('deleted_at'),
@@ -140,6 +143,8 @@ export enum ActivityType {
   REMOVE_TEAM_MEMBER = 'REMOVE_TEAM_MEMBER',
   INVITE_TEAM_MEMBER = 'INVITE_TEAM_MEMBER',
   ACCEPT_INVITATION = 'ACCEPT_INVITATION',
+  APPROVE_USER = 'APPROVE_USER',
+  REJECT_USER = 'REJECT_USER',
 }
 
 // Gaming node status enum

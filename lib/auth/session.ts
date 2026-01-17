@@ -18,7 +18,7 @@ export async function comparePasswords(
 }
 
 type SessionData = {
-  user: { id: number };
+  user: { id: number; role: string };
   expires: string;
 };
 
@@ -43,10 +43,10 @@ export async function getSession() {
   return await verifyToken(session);
 }
 
-export async function setSession(user: NewUser) {
+export async function setSession(user: NewUser & { role: string }) {
   const expiresInOneDay = new Date(Date.now() + 24 * 60 * 60 * 1000);
   const session: SessionData = {
-    user: { id: user.id! },
+    user: { id: user.id!, role: user.role },
     expires: expiresInOneDay.toISOString(),
   };
   const encryptedSession = await signToken(session);
