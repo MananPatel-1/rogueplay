@@ -4,6 +4,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { PendingUserActions } from './pending-user-actions';
 import { UserX } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 function getRelativeTime(date: Date) {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
