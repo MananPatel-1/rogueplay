@@ -149,3 +149,7 @@ export async function createNode(data: NewGamingNode): Promise<GamingNode> {
 export async function deleteNode(nodeId: number): Promise<void> {
   await db.delete(gamingNodes).where(eq(gamingNodes.id, nodeId));
 }
+
+export async function deleteSessionsByNodeId(nodeId: number): Promise<void> {
+  await db.delete(gamingSessions).where(eq(gamingSessions.nodeId, nodeId));
+}

@@ -1,5 +1,5 @@
 import { tensorDockClient } from './tensordock';
-import { getAllNodes, createNode, deleteNode } from './queries';
+import { getAllNodes, createNode, deleteNode, deleteSessionsByNodeId } from './queries';
 import { GamingNodeStatus, type GamingNode } from '@/lib/db/schema';
 
 export interface SyncResult {
@@ -62,12 +62,11 @@ export async function syncTensorDockNodes(): Promise<SyncResult> {
   for (const node of dbNodes) {
     if (!tensorDockMap.has(node.tensorDockInstanceId)) {
       try {
+        await deleteSessionsByNodeId(node.id);
         await deleteNode(node.id);
         result.removed++;
         result.removedNodes.push(node.name);
       } catch (error) {
-        // This will fail if there are active sessions referencing the node
-        // (foreign key constraint violation)
         result.errors.push({
           operation: 'remove',
           instanceId: node.tensorDockInstanceId,
